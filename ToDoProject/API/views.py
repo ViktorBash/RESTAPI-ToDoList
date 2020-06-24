@@ -28,7 +28,7 @@ def apiOverView(request):
 # Takes all task objects, puts it in serializer, then returns it as JSON object as Response
 @api_view(["GET"])
 def taskList(request):
-    tasks = Task.objects.all()
+    tasks = Task.objects.all().order_by("-id")
     serializer = TaskSerializer(tasks, many=True)
     return Response(serializer.data)
 
