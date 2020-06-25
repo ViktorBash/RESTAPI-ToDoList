@@ -1,4 +1,5 @@
 /*
+            Documentation/Planning:
 			KEY COMPONENTS:
 			"activeItem" = null until an edit button is clicked. Will contain object of item we are editing
 			"list_snapshot" = Will contain previous state of list. Used for removing extra rows on list update
@@ -33,42 +34,36 @@ function getCookie(name) {
     }
     return cookieValue;
 }
-var csrftoken = getCookie('csrftoken');
-var activeItem = null
-var list_snapshot = []
+let csrftoken = getCookie('csrftoken');
+let activeItem = null
+let list_snapshot = []
 
-// Will call data from the API and put it into the HTMl wrapper
+// Will call data from the API and put use the DOM to add it to the HTML on startup and when anything is changed
 function buildList() {
     let wrapper = document.querySelector("#list-wrapper")
-    // wrapper.innerHTML = "" // Clear wrapper incase there is already something there, since we refresh whole list
-
-
-
-
-
     let url = 'http://localhost:8000/api/task-list/'
 
+    // Fetch all of the tasks from the API
     fetch(url)
         .then((resp) => resp.json())
         .then(function(data) {
-            console.log('Data: ', data);
 
-            let list = data;
+            let list = data;  // Array of all of the task objects
+            // Fixes refreshing bug where screen flickers
             for (let i in list) {
-
                 try {
-                    document.getElementById(`#data-row-${i}`).remove()
-
+                    document.getElementById(`data-row-${i}`).remove()
                 }
                 catch(err) {
-
                 }
 
-                var title = `<span class="title">${list[i].title}</span>`
+                // Whether task is completed or not determines if it is gonna be striked out
+                let title = `<span class="title">${list[i].title}</span>`
                 if (list[i].completed === true) {
                     title = `<strike class="title">${list[i].title}</strike>`
                 }
 
+                // create the task
                 let item = `
                     <div id="data-row-${i}" class="task-wrapper flex-wrapper">
                         <div style="flex: 7">
@@ -83,22 +78,23 @@ function buildList() {
                     </div>
                 `
 
+                // Add the task  (DOM manipulation)
                 wrapper.innerHTML += item;
             }
 
+            // Resolve flickering screen bug
             if (list_snapshot.length > list.length){
-                for(var i = list.length; i < list_snapshot.length; i++) {
-                    document.getElementById(`#data-row-${i}`).remove()
-
+                for (let i = list.length; i < list_snapshot.length; i++) {
+                    document.getElementById(`data-row-${i}`).remove()
                 }
             }
             list_snapshot = list
 
-            // To add event listener to edit and delete button
+            // Add event listener to edit and delete button
             for (let i in list) {
-                var editBtn = document.getElementsByClassName("edit")[i]
-                var deleteBtn = document.getElementsByClassName("delete")[i]
-                var title = document.getElementsByClassName('title')[i]
+                let editBtn = document.getElementsByClassName("edit")[i]
+                let deleteBtn = document.getElementsByClassName("delete")[i]
+                let title = document.getElementsByClassName('title')[i]
 
                 editBtn.addEventListener('click', (function(item){
                     return function(){
@@ -123,10 +119,10 @@ function buildList() {
         })
 }
 
-var form = document.querySelector("#form-wrapper");
+// For editing and creating tasks
+let form = document.querySelector("#form-wrapper");
 form.addEventListener('submit', function(e) {
     e.preventDefault();
-    console.log('Form submitted')
     let url = 'http://localhost:8000/api/task-create/'
 
     // If we are editing instead of creating, change the URL for the JSON object we send.
@@ -153,6 +149,7 @@ form.addEventListener('submit', function(e) {
     document.querySelector("#title").value = "";
 })
 
+// Edit item by putting it into the add task bar for editing
 function editItem(item) {
     console.log("Item clicked ", item)
     // When we edit item we want to put it into the submit bar at the top, and set activeItem to the item we are
@@ -161,6 +158,7 @@ function editItem(item) {
     document.querySelector("#title").value = activeItem.title;
 }
 
+// Send POST request w/ JSON of the task object to delete, then buildList()
 function deleteItem(item) {
     console.log("Delete clicked", item)
 
@@ -175,6 +173,7 @@ function deleteItem(item) {
     })
 }
 
+// Strike or unstrike tasks based on if they are completed attribute
 function strikeUnstrike(item) {
     console.log("Strike clicked")
     item.completed = !item.completed;
